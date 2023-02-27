@@ -10,4 +10,4 @@ const Product = Schema({
     sold: {type: Number, require: true}
 })
 
-module.exports = mongoose.Schema('products', Product);
+module.exports = mongoose.model('products', Product);

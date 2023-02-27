@@ -14,4 +14,4 @@ const generateJWT = async(_id, userName,email) =>{
     }
 }
 
-module.exports
+module.exports = {generateJWT};
