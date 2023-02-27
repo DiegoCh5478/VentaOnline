@@ -2,8 +2,8 @@ const jwt = require('jsonwebtoken');
 require('dotenv').config();
 const key = process.env.SECRET_KEY;
 
-const generateJWT = async(_id, userName,email) =>{
-    const payLoad = {_id, userName, email};
+const generateJWT = async(uId, userName, email) =>{
+    const payLoad = {uId, userName, email};
     try {
         const token = await jwt.sign(payLoad, key,{
             expiresIn: '1h'
