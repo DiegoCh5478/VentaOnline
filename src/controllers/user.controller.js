@@ -7,7 +7,7 @@ const {generateJWT} = require('../helpers/create-jwt');
 // ************************ CRUD PARA USUARIOS ***********************************/
 //********************************************************************************/
 
-//>>>>>>>>>>>>>>>>>>>>>>>>>Crear usuario
+//>>>>>>>>>>>>>>>>>>>>>>>>> Crear usuario
 
 const createUser = async(req, res)=>{
     const {email, password} = req.body;
@@ -205,4 +205,30 @@ const comprobarADMIN = (rol)=>{
     }
 }
 
-module.exports = {loginUser, createUser,readUsers,UpdateUser,deleteUser};
+
+//********************************************************************************/
+// ******************************** USUARIO POR DEFECTO  *************************/
+//********************************************************************************/
+
+const userDefault = async(req, res) =>{
+    //Comprobar que no hayan usuario ragistrados
+        let  user = new User();
+        user.userName = 'ADMIN';
+        user.lastName = 'Administrador';
+        user.password = '123456';
+        user.email = 'admini@gmail.com';
+        user.rol = 'ADMIN';
+        //Comprobar que el correo no este en uso
+        let email = user.email;
+        const userEmail = await User.findOne({email});
+        if(userEmail){
+            return console.log(`El correo ${email} ya esta en uso.`);
+        }
+        // Si no esta en uso
+        user = await user.save();
+        return console.log(`Usuario creado correctamente, datos del usuario: ${user}`);
+}
+
+// ====================== Exportaciones
+
+module.exports = {loginUser, createUser,readUsers,UpdateUser,deleteUser,userDefault};

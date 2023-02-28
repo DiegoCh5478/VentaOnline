@@ -20,7 +20,8 @@ api.post('/create-user',[
     check("userName", "El userName es obligatorio").not().isEmpty(),
     check("userLastName", "El userLastName es obligatorio").not().isEmpty(),
     check("email", "El email es obligatorio").not().isEmpty(),
-    check("password", "El password es obligatorio").isLength({min: 6})
+    check("password", "El password es obligatorio").isLength({min: 6}),
+    validateParamas
 ],createUser);
 
 //>>>Ver usuarios
@@ -34,7 +35,8 @@ api.put('/edit-user',[
     validateJWT,
     check("userName", "El userName es obligatorio").not().isEmpty(),
     check("email", "El email es obligatorio").not().isEmpty(),
-    check("password", "La contraseña debe tener mas de 5 caracteres").isLength({min: 6,}), 
+    check("password", "La contraseña debe tener mas de 5 caracteres").isLength({min: 6,}),
+    validateParamas 
 ],UpdateUser)
 
 
@@ -52,6 +54,7 @@ api.delete('/delete-user',[
 api.post('/login', [
     check("email", "El email es obligatorio").not().isEmpty(),
     check("password", "El password es obligatorio").not().isEmpty(),
+    validateParamas
 ], loginUser);
 
 module.exports = api;
