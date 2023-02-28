@@ -212,21 +212,25 @@ const comprobarADMIN = (rol)=>{
 
 const userDefault = async(req, res) =>{
     //Comprobar que no hayan usuario ragistrados
-        let  user = new User();
-        user.userName = 'ADMIN';
-        user.lastName = 'Administrador';
-        user.password = '123456';
-        user.email = 'admini@gmail.com';
-        user.rol = 'ADMIN';
-        //Comprobar que el correo no este en uso
-        let email = user.email;
-        const userEmail = await User.findOne({email});
-        if(userEmail){
-            return console.log(`El correo ${email} ya esta en uso.`);
+    let user = await User.find();
+        if(!user){
+            //Si no hay usuairos registrados se crea uno por defecto
+            user = new User();
+            user.userName = 'ADMIN';
+            user.lastName = 'Administrador';
+            user.password = '123456';
+            user.email = 'admini@gmail.com';
+            user.rol = 'ADMIN';
+            //Comprobar que el correo no este en uso
+            let email = user.email;
+            const userEmail = await User.findOne({email});
+            if(userEmail){
+                return console.log(`El correo ${email} ya esta en uso.`);
+            }
+            // Si no esta en uso
+            user = await user.save();
+            return console.log(`Usuario creado correctamente, datos del usuario: ${user}`);
         }
-        // Si no esta en uso
-        user = await user.save();
-        return console.log(`Usuario creado correctamente, datos del usuario: ${user}`);
 }
 
 // ====================== Exportaciones
