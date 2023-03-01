@@ -112,7 +112,7 @@ const createDefaultCategory = async()=>{
     
     let category = new Category();
     category.categoryName = 'Categoria por defecto';
-    category.descriptionCategory = 'Aqui estaran los productos sin una categoria.';
+    category.descriptionCategory = 'Categoria para los productos sin una categoria.';
     //Buscamos si ya se creo la categoria con ese nombre
     let categoryExists = await Category.findOne({categoryName: 'Categoria por defecto'});
     console.log(categoryExists);

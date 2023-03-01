@@ -11,7 +11,8 @@ const Invoice = Schema({
     //Productos de la factura
     invoiceProducts: [{
         product: {type: Schema.Types.ObjectId, ref: 'products'},
-        amount: {type: Number, require: true}
+        amount: {type: Number, require: true},
+        prodcutNaem: {type: Number, require: true}
     }]
 });
 
