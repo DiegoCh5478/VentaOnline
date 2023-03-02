@@ -7,17 +7,24 @@ const app = express();
 const {connection} = require('./src/database/connection')
 // Traemos la constante del puerto
 require('dotenv').config();
+//Importar el usuario por defecto
+const {userDefault} = require('./src/controllers/user.controller');
 const port = process.env.PORT;
 //Importamos las rutas de user
 const routesUser = require('./src/routes/user.routes')
+const routesCategory = require('./src/routes/category.routes')
 
 connection();
 
 //Middlewares para express
 app.use(express.urlencoded({extended: false}));
 app.use(express.json());
+//Crear usuario
+
+userDefault();
 
 app.use('/api', routesUser);
+app.use('/api', routesCategory);
 
 app.listen(port, () =>{
     console.log(`Servidor corriendo en el puerto ${port}`);
