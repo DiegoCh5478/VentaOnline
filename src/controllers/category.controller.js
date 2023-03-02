@@ -53,12 +53,27 @@ const updateCategory = async(req, res)=>{
         if(comprobarADMIN(req.userLogin.rol)){
             //Obtener atributos del request
             const {idCategory,categoryName} = req.body;
+<<<<<<< HEAD
             //Ver si la nueva categoria tiene el mismo nombre que la anitgua, si son iguales no entre en la comprobacion
             let categoryOld = await Category.findById(idCategory);
             if(!(categoryOld.categoryName == categoryName)){
                 let categoryExists = await Category.findOne({categoryName});
                 if(categoryExists){
                     return res.status(400).send({message: `El nombre ${categoryName} ya fue usado por la categoria: `, categoryExists});
+=======
+            console.log(`Obteniendo las propiedades del body ${idCategory} y ${categoryName}`);
+            //Ver si la nueva categoria tiene el mismo nombre que la anitgua, si son iguales no entre en la comprobacion
+            let categoryOld = await Category.findById(idCategory);
+            console.log(`Se encontro la categoria con el id ${categoryOld}`);
+            if(!categoryOld){
+                return res.status(400).send({message:`No se encontro la categoria con el id: ${idCategory}`})
+            }
+
+            if(!(categoryOld.categoryName == categoryName)){
+                let categoryExists = await Category.findOne({categoryName:categoryName});
+                if(categoryExists){
+                    return res.status(400).send({ok: false, message: `El nombre ${categoryName} ya fue usado por la categoria: `, categoryExists});
+>>>>>>> 05c15239d0b75052ee3bba5707e7743f1a5b57fc
                 }
             }
             //Pasado el filtro se crea una nueva categoria, se actualiza y se envia el mensaje de exito.
@@ -75,6 +90,7 @@ const updateCategory = async(req, res)=>{
 //>>>>>>>>>>>>>>>>>>>>>>>>> Delete categoria
 
 const deleteCategory = async(req,res)=>{
+<<<<<<< HEAD
     if(comprobarADMIN(req.userLogin.rol)){
         let idCategory = req.body;
         //Buscar si hay una categoria por defecto
@@ -93,6 +109,28 @@ const deleteCategory = async(req,res)=>{
 
     }else{
         return res.status(400).send({message: `El ussuario ${req.userLogin.userName} no tienen un rol ADMIN`});
+=======
+    try {
+        if(comprobarADMIN(req.userLogin.rol)){
+            let idCategory = req.body.idCategory;
+            
+            //Ver si la categoria que se quiere eliminar existe en la bse de datos
+            const categoryExists = await Category.findById(idCategory);
+            if(!categoryExists){
+                return res.status(404).send({message: 'No se encontro la categoria que se desea eliminar'});
+            }    
+            //Eliminamos la categoria
+            const categoryDelete = await Category.findByIdAndDelete(idCategory);
+            //Tratamos de crear una categoria por defecto
+            createDefaultCategory();
+            return res.status(200).send({message: `Se eliminio la categoria con el id ${idCategory} `, categoryDelete});
+            
+        }else{
+            return res.status(400).send({message: `El ussuario ${req.userLogin.userName} no tienen un rol ADMIN`});
+        }
+    } catch (error) {
+        throw new Error(error)
+>>>>>>> 05c15239d0b75052ee3bba5707e7743f1a5b57fc
     }
 }
 
@@ -101,6 +139,7 @@ const deleteCategory = async(req,res)=>{
 //********************************************************************************/
 
 const createDefaultCategory = async()=>{
+<<<<<<< HEAD
     console.log(`Creando categoria por defecto...................`);
     const categoryName = 'Categoria por defecto';
     let category = new Category();
@@ -116,6 +155,22 @@ const checkCategoryExistsForId = async(id)=>{
         return false;
     }
 }
+=======
+    
+    let category = new Category();
+    category.categoryName = 'Categoria por defecto';
+    category.descriptionCategory = 'Categoria para los productos sin una categoria.';
+    //Buscamos si ya se creo la categoria con ese nombre
+    let categoryExists = await Category.findOne({categoryName: 'Categoria por defecto'});
+    console.log(categoryExists);
+    if(categoryExists){
+        return console.log(`La categoria por defecto ya fue creada......`);
+    }
+    console.log(`Creando categoria por defecto...................`);
+    category = await category.save();
+}
+
+>>>>>>> 05c15239d0b75052ee3bba5707e7743f1a5b57fc
 
 const comprobarADMIN = (rol)=>{
     if(rol == 'ADMIN'){
