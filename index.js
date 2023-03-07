@@ -11,8 +11,9 @@ require('dotenv').config();
 const {userDefault} = require('./src/controllers/user.controller');
 const port = process.env.PORT;
 //Importamos las rutas de user
-const routesUser = require('./src/routes/user.routes')
-const routesCategory = require('./src/routes/category.routes')
+const routesProduct = require('./src/routes/product.routes');
+const routesUser = require('./src/routes/user.routes');
+const routesCategory = require('./src/routes/category.routes');
 
 connection();
 
@@ -25,6 +26,7 @@ userDefault();
 
 app.use('/api', routesUser);
 app.use('/api', routesCategory);
+app.use('/api', routesProduct);
 
 app.listen(port, () =>{
     console.log(`Servidor corriendo en el puerto ${port}`);

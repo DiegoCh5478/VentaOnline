@@ -28,8 +28,8 @@ api.get('/read-categories', readCategories);
 // >>> Actualizar categoria
 api.put('/update-category',[
     validateJWT,
-    check("idCategory", "El idCategory es obligatorio para crear la cateogria").not().isEmpty(),
-    check("descriptionCategory", "El descriptionCategory es obligatorio para crear la cateogria").not().isEmpty(),
+    check("idCategory", "El idCategory es obligatorio para editar la cateogria").not().isEmpty(),
+    check("descriptionCategory", "El descriptionCategory es obligatorio para editar la cateogria").not().isEmpty(),
     validateParamas
 ], updateCategory);
 

@@ -17,7 +17,7 @@ const cretaeCategory = async(req, res)=>{
             //Comprobar que no exista una categoria con el mismo nombre
             let categoryExists = await Category.findOne({categoryName});
             if(categoryExists){
-                return res.status(400).send({message: `El nombre de categoria ${categoryName} ya es usado por la categoria: `,categoryExists})
+                return res.status(400).send({ok: false, message: `El nombre de categoria ${categoryName} ya es usado por una categoria`})
             }
             //Pasado el filtro se crea una nueva categoria, se guarda y se envia el mensaje de exito.
             let category = new Category(req.body);
@@ -52,10 +52,10 @@ const updateCategory = async(req, res)=>{
         if(comprobarADMIN(req.userLogin.rol)){
             //Obtener atributos del request
             const {idCategory,categoryName} = req.body;
-            console.log(`Obteniendo las propiedades del body ${idCategory} y ${categoryName}`);
+
             //Ver si la nueva categoria tiene el mismo nombre que la anitgua, si son iguales no entre en la comprobacion
             let categoryOld = await Category.findById(idCategory);
-            console.log(`Se encontro la categoria con el id ${categoryOld}`);
+
             if(!categoryOld){
                 return res.status(400).send({message:`No se encontro la categoria con el id: ${idCategory}`})
             }
@@ -63,7 +63,7 @@ const updateCategory = async(req, res)=>{
             if(!(categoryOld.categoryName == categoryName)){
                 let categoryExists = await Category.findOne({categoryName:categoryName});
                 if(categoryExists){
-                    return res.status(400).send({ok: false, message: `El nombre ${categoryName} ya fue usado por la categoria: `, categoryExists});
+                    return res.status(400).send({ok: false, message: `El nombre ${categoryName} ya fue usado por otra categoria`});
                 }
             }
             //Pasado el filtro se crea una nueva categoria, se actualiza y se envia el mensaje de exito.
