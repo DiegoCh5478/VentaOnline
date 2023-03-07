@@ -7,7 +7,7 @@ const Product = Schema({
     description: {type: String, require: true},
     price: {type: Number, require: true},
     stock: {type: Number, require: true},
-    sold: {type: Number, require: false},
+    sold: {type: Number, require: true},
     idProductCategory: {type: Schema.Types.ObjectId, ref: 'categories'}
 });
 

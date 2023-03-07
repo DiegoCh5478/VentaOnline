@@ -9,7 +9,7 @@ const {generateJWT} = require('../helpers/create-jwt');
 
 //>>>>>>>>>>>>>>>>>>>>>>>>> Crear usuario
 
-const createUser = async(req, res)=>{
+const createUserAdmin = async(req, res)=>{
     const {email, password} = req.body;
     try {
         //Comprobar que el email no se este usando ya
@@ -18,18 +18,31 @@ const createUser = async(req, res)=>{
             console.log('Se encontro un usuario con el mismo email');
             return res.status(400).send({message:`El correo ${email} ya esta en uso.`, ok: false});
         }
-        if(req.body.rol == null|| req.body.rol == undefined || req.body.rol == ''){
-            req.body.rol = 'CLIENT'
-            // Hacer que haya un ADMIN, si todavia no hay usuario registrados el primero sera ADMNIN
-            const usersFind = await User.findOne();
-            //Si no hay usuarios agregados el primero sera un admin
-            if(usersFind === null || usersFind === undefined ){
-                req.body.rol = 'ADMIN';
-            }
+        //Creamos el nuevo usuario
+        user = new User(req.body);
+        user.rol = 'ADMIN';
+        //Encriptamos la contrasena
+        user.password = bcrypt.hashSync(password, bcrypt.genSaltSync());
+        //Guardamos el nuevo usuario y le mandamos un mensaje de respusta con exito
+        user = await user.save();
+        res.status(200).send({message: `El usuario ${user.userName} fue creado con exito.`,user});
+
+    } catch (error) {
+        throw new Error(error);
+    }
+}
+const createUserClient = async(req, res)=>{
+    const {email, password} = req.body;
+    try {
+        //Comprobar que el email no se este usando ya
+        let user = await User.findOne({email});
+        if(user){
+            console.log('Se encontro un usuario con el mismo email');
+            return res.status(400).send({message:`El correo ${email} ya esta en uso.`, ok: false});
         }
         //Creamos el nuevo usuario
         user = new User(req.body);
-
+        user.rol = 'CLIENT';
         //Encriptamos la contrasena
         user.password = bcrypt.hashSync(password, bcrypt.genSaltSync());
         //Guardamos el nuevo usuario y le mandamos un mensaje de respusta con exito
@@ -248,4 +261,4 @@ const userDefault = async() =>{
 
 // ====================== Exportaciones
 
-module.exports = {loginUser, createUser,readUsers,UpdateUser,deleteUser,userDefault};
+module.exports = {loginUser, createUserAdmin,createUserClient,readUsers,UpdateUser,deleteUser,userDefault};

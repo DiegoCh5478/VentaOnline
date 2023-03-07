@@ -1,5 +1,5 @@
 'use strict'
-const {loginUser,createUser,readUsers,UpdateUser,deleteUser} = require('../controllers/user.controller');
+const {loginUser,createUserAdmin,createUserClient,readUsers,UpdateUser,deleteUser} = require('../controllers/user.controller');
 const {Router} = require('express');
 
 
@@ -15,14 +15,23 @@ const api = Router();
 //************************* MANEJO DE USUARIOS ***********************************/
 //********************************************************************************/
 
-//>>>Crear un usuario
-api.post('/create-user',[
+//>>>Crear un usuario de tipo administrador
+api.post('/create-user-admin',[
     check("userName", "El userName es obligatorio").not().isEmpty(),
     check("userLastName", "El userLastName es obligatorio").not().isEmpty(),
     check("email", "El email es obligatorio").not().isEmpty(),
     check("password", "El password debe tener mas de 6 caracteres").isLength({min: 6}),
     validateParamas
-],createUser);
+],createUserAdmin);
+
+//>>>Crear un usuario de tipo cliente
+api.post('/create-user-client',[
+    check("userName", "El userName es obligatorio").not().isEmpty(),
+    check("userLastName", "El userLastName es obligatorio").not().isEmpty(),
+    check("email", "El email es obligatorio").not().isEmpty(),
+    check("password", "El password debe tener mas de 6 caracteres").isLength({min: 6}),
+    validateParamas
+],createUserClient);
 
 //>>>Ver usuarios
 api.get('/read-users', readUsers);

@@ -6,7 +6,7 @@ const {check} = require('express-validator');
 const {validateParamas} = require('../middlewares/validate-params');
 const {validateJWT} = require('../middlewares/validate-jwt');
 //Funciones creadas
-const {createProduct, readProducts,UpdatProduct,deleteProduct} = require('../controllers/product.controller');
+const {createProduct, readProducts,UpdatProduct,deleteProduct, bestSellers,productsSoldOut} = require('../controllers/product.controller');
 
 //********************************************************************************/
 //************************* MANEJO DE PRODUCTOS **********************************/
@@ -41,5 +41,18 @@ api.delete('/delete-product',[
     check('idProduct', 'El idProduct es un parametro obligatorio.').not().notEmpty(),
     validateParamas
 ], deleteProduct)
+
+//********************************************************************************/
+//************************** TIPOS DE BUSQUEDAS **********************************/
+//********************************************************************************/
+// >>>>>>> Productos mas vendidos
+api.get('/read-best-sellers',[
+    validateJWT
+], bestSellers);
+
+// >>>>>>> Productos agotados
+api.get('/read-sold-out',[
+    validateJWT
+], productsSoldOut);
 
 module.exports = api;

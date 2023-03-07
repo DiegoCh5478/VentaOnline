@@ -24,6 +24,7 @@ const createProduct = async(req, res)=>{
             if(!categoryExists){
                 return res.status(400).send({message: `La categoria con el id ${idProductCategory} no existe.`});
             }
+            if(req.body.sold == null || req.body.sold == undefined) req.body.sold = 0;
             product = new Product(req.body);
             product = await product.save();
             //Regresamos el mensaje de exito
@@ -100,6 +101,45 @@ const deleteProduct = async(req, res)=>{
     }
 }
 
+
+//********************************************************************************/
+//************************** TIPOS DE BUSQUEDAS **********************************/
+//********************************************************************************/
+
+//>>>>>>>>>>>>>>>>>>>>>>>>> Productos mas vendidos
+const bestSellers = async(req, res)=>{
+    if(comprobarADMIN(req.userLogin.rol)){
+        const bestSellers = await Product.find({}, {sort: {'sold': -1}});
+        if(bestSellers.length == 0){
+            return res.status(400).send({message: `No se encontraron productos.`});
+        }
+        let products = [];
+        let product;
+        for (let index = 0; index < bestSellers.length; index++) {
+             product = await Product.findById(bestSellers[index]);
+            console.log(`*****Product encontrado: ${product}`);
+            products[index] = product;
+        }
+        return res.status(200).send({message: 'Productos mas vendidos: ', products});
+    }else{
+        return res.status(400).send({message: `El usuario ${req.userLogin.userName} no es un administrador`});
+    }
+}
+
+//>>>>>>>>>>>>>>>>>>>>>>>>> Productos agotados
+
+const productsSoldOut = async(req, res)=>{
+    if(comprobarADMIN(req.userLogin.rol)){
+        const productsSoldOut = await Product.find({'stock': {$lt: 1}});
+        if(productsSoldOut.length == 0){
+            return res.status(400).send({message: `No hay productos agotados.`});
+        }
+        return res.status(200).send({message: `Productos agotados:`, productsSoldOut});
+    }else{
+        return res.status(400).send({message: `El usuario ${req.userLogin.userName} no es un administrador`});
+    }
+}
+
 //********************************************************************************/
 // ************************ FUNCIONES EXTRA **************************************/
 //********************************************************************************/
@@ -119,4 +159,4 @@ const comprobarCategoriaExistaId = async(id)=>{
 
 // ====================== Exportaciones
 
-module.exports = {createProduct,readProducts,UpdatProduct, deleteProduct};
+module.exports = {createProduct,readProducts,UpdatProduct, deleteProduct,bestSellers, productsSoldOut};
