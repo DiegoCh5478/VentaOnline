@@ -23,7 +23,6 @@ const User = require("../models/user.model");
 
         // Buscamos a que usuario le pertenece el token encontrado, esto por el id
         const userFind = await User.findById(payLoad.uId);
-        console.log(`El usuario encontrado por el token es: ${userFind}`);
 
         // Verificar que el token encontrado no haya expirado
         if (payLoad.exp <= moment().unix()) {

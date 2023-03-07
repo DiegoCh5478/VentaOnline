@@ -94,7 +94,21 @@ const UpdateUser = async (req, res) => {
         }else{
             userEdit.password = userEdit.password;
         }
-  
+        
+        //Comprobar que el correo no este en uso o bien sea el mismo que ya se tenia registrado
+        /* Para eso primero buscamos el usuario que se quiere editar, y saber si existe o no */
+        const oldUser = await User.findById({_id: id});
+        if(!oldUser){
+            return res.status(404).send({message: `El usuario que trata de actualizar no existe en la base de datos.`})
+        }
+        if(!(oldUser.email == req.body.email)){
+            let emailNew = req.body.email;
+            console.log(`Email ingresado: ${emailNew}`);
+            const emailUsed = await User.findOne({emailNew});
+            if(emailUsed){
+                return res.status(400).send({message: `El nuevo correo que trata de registrar ya esta en uso.`})
+            }
+        }
         //Buscamos el usuario con el id que tenemos 
         const userComplete = await User.findByIdAndUpdate(id, userEdit, {
           new: true,
@@ -139,11 +153,11 @@ const deleteUser = async(req,res)=>{
             }
             //Comprobar que el usuario que se quiere elininar no sea un admnistrador
             if(userRolDelete.rol == 'ADMIN'){
-                return res.status(400).send({ok: false, message: `El usuario que trata de eliminar es un admin, esta funcion solo esta habilitada para eliminar usuarios client. Datos del otro ADMIN:`, userRolDelete});
+                return res.status(400).send({ok: false, message: `El usuario que trata de eliminar es un admin, esta funcion solo esta habilitada para eliminar usuarios client.`});
             }
         }else{
             // Si no es un admin entonces se borrara el propio usuario
-            console.log(`Se borrara su propio usuario................`);
+            console.log(`Se borro su propio usuario................`);
             id = req.userLogin._id;
         }
 
@@ -168,7 +182,6 @@ const loginUser = async(req,res)=>{
         if(!user){
             return res.status(400).send({ok: false, message: `No se encontro un usuario con el email: ${email}`});
         }
-
         // La contasena dada la comparamos con la contrasena del usuario encontrado
         const correctParams = bcrypt.compareSync(password, user.password);
 
@@ -218,7 +231,8 @@ const userDefault = async() =>{
         user.userName = 'ADMIN';
         user.lastName = 'Administrador';
         user.password = '123456';
-        user.email = 'admini@gmail.com';
+        user.password = bcrypt.hashSync(user.password, bcrypt.genSaltSync());
+        user.email = 'admin@gmail.com';
         user.rol = 'ADMIN';
         //Comprobar que el correo no este en uso
         let email = user.email;
