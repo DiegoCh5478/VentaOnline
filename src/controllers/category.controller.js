@@ -88,11 +88,13 @@ const deleteCategory = async(req,res)=>{
             const categoryExists = await Category.findById(idCategory);
             if(!categoryExists){
                 return res.status(404).send({message: 'No se encontro la categoria que se desea eliminar'});
-            }    
+            }
             //Eliminamos la categoria
             const categoryDelete = await Category.findByIdAndDelete(idCategory);
             //Tratamos de crear una categoria por defecto
             createDefaultCategory();
+            //Movemos los productos que hacian referencia a la categoria eliminada.
+            moveProducts(idCategory);
             return res.status(200).send({message: `Se eliminio la categoria con el id ${idCategory} `, categoryDelete});
             
         }else{
@@ -122,6 +124,22 @@ const createDefaultCategory = async()=>{
     category = await category.save();
 }
 
+const moveProducts = async(idCategory)=>{
+    const products = await Product.find({idProductCategory: idCategory});
+    if(products.length == 0){
+        return console.log(`No hay productos que sean de la categoria con el id: ${idCategory} `);
+    }
+    let categoryDefault = await Category.findOne({categoryName: 'Categoria por defecto'});
+    let idCategoryDefault = categoryDefault._id;
+    console.log(`Id de la categoria por defecto: ${idCategoryDefault}`);
+    //Sustituir la categoria que tienen agregada los productos
+    for (let index = 0; index < products.length; index++) {
+        let idProduct = products[index]._id;
+        console.log(`producto encontrado numero #${index}, antes: ${products[index]}`);
+        let prodcutAfeter = await Product.findByIdAndUpdate({_id: idProduct}, {idProductCategory: idCategoryDefault}, {new: true});
+        console.log(`Mismo producto despues: ${prodcutAfeter}`);
+    }
+}
 
 const comprobarADMIN = (rol)=>{
     if(rol == 'ADMIN'){
