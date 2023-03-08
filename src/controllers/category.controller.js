@@ -105,6 +105,15 @@ const deleteCategory = async(req,res)=>{
     }
 }
 
+//>>>>>>>>>>>>>>>>>>>>>>>>> Buscar categoria por su nombre
+
+const searchCategoryByName = async(req, res)=>{
+    const categoryName = req.body.categoryName;
+    const categoryFind = await Category.findOne({categoryName: categoryName});
+    if(!categoryFind) return res.status(404).send({message: `La categoria con el nombre ${categoryName}, no existe en la base de datos.`});
+    return res.status(200).send({message: `Categoria encontrada:`, categoryFind});
+}
+
 //********************************************************************************/
 // ************************ FUNCIONES EXTRA **************************************/
 //********************************************************************************/
@@ -135,9 +144,7 @@ const moveProducts = async(idCategory)=>{
     //Sustituir la categoria que tienen agregada los productos
     for (let index = 0; index < products.length; index++) {
         let idProduct = products[index]._id;
-        console.log(`producto encontrado numero #${index}, antes: ${products[index]}`);
         let prodcutAfeter = await Product.findByIdAndUpdate({_id: idProduct}, {idProductCategory: idCategoryDefault}, {new: true});
-        console.log(`Mismo producto despues: ${prodcutAfeter}`);
     }
 }
 
@@ -152,4 +159,4 @@ const comprobarADMIN = (rol)=>{
 
 // ====================== Exportaciones
 
-module.exports = {cretaeCategory,updateCategory,readCategories, deleteCategory};
+module.exports = {cretaeCategory,updateCategory,readCategories, deleteCategory, searchCategoryByName};

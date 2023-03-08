@@ -1,6 +1,6 @@
 'use strict'
 const {Router} = require('express');
-const {cretaeCategory,updateCategory,readCategories, deleteCategory} = require('../controllers/category.controller');
+const {cretaeCategory,updateCategory,readCategories, deleteCategory, searchCategoryByName} = require('../controllers/category.controller');
 
 // Importamos los middlewares
 const {validateParamas} = require("../middlewares/validate-params");
@@ -22,7 +22,7 @@ api.post('/create-category',[
 ], cretaeCategory);
 
 
-// >>> Actualizar categoria
+// >>> Ver categorias
 api.get('/read-categories', readCategories);
 
 // >>> Actualizar categoria
@@ -38,5 +38,10 @@ api.delete('/delete-category',[
     validateJWT,
     check("idCategory", "El idCategory es obligatorio para eliminar la cateogria").not().isEmpty(),
 ], deleteCategory);
+
+// >>> Buscar una categoria por nombre
+api.get('/search-category-by-name', [
+    check('categoryName', 'El categoryName es obligatorio para buscar la categoria.').not().isEmpty()
+] ,searchCategoryByName);
 
 module.exports = api;

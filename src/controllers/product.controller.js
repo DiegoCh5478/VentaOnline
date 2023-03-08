@@ -140,6 +140,26 @@ const productsSoldOut = async(req, res)=>{
     }
 }
 
+//>>>>>>>>>>>>>>>>>>>>>>>>> Buscar productos por nombre de categoria
+
+const findProductByName = async(req, res)=>{
+    const nameProduct = req.body.nameProduct;
+    const productFind = await Product.findOne({nameProduct});
+    if(!productFind) return res.status(404).send({message: `No se encontro el producto con el nombre: ${nameProduct}`});
+    return res.status(200).send({message: `Producto: `, productFind});
+}
+
+//>>>>>>>>>>>>>>>>>>>>>>>>> Buscar productos por nombre de categoria
+const searchProductByCategory = async(req, res)=>{
+    const categoryName = req.body.categoryName;
+    const category = await Category.findOne({categoryName});
+    if(!category) return res.status(404).send({message: `No se encontro la categoria con el nombre: ${categoryName}`});
+    const idCategory = category._id;
+    const products = await Product.find({idProductCategory:idCategory});
+    if(products.length == 0) return res.status(400).send({message: `No se encontraron productos con la categoria ${categoryName}`});
+    return res.status(200).send({message: `Productos con la categoria ${categoryName}`, products});
+}
+
 //********************************************************************************/
 // ************************ FUNCIONES EXTRA **************************************/
 //********************************************************************************/
@@ -159,4 +179,4 @@ const comprobarCategoriaExistaId = async(id)=>{
 
 // ====================== Exportaciones
 
-module.exports = {createProduct,readProducts,UpdatProduct, deleteProduct,bestSellers, productsSoldOut};
+module.exports = {createProduct,readProducts,UpdatProduct, deleteProduct,bestSellers, productsSoldOut, searchProductByCategory,findProductByName};
