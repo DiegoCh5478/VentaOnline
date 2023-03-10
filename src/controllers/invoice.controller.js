@@ -211,6 +211,7 @@ const buyEntireCart = async(req, res)=>{
             invoice.totalPrice = await totalPrice(productsWithStock);
             await invoice.save();
 
+            //En caso de haberse comprado productos por que no habia suficiente stock, ya no existia en la base de datos o ambas
             if(deprecatedproducts.length != 0) return res.status(200).json({'Productos en el carrito que ya no existen en la base de datos: ': deprecatedproducts}, {'Se genero la fatura correctamente': invoice})
             if(productsWithoutStock.length != 0) return res.status(200).json({'Productos en el carrito que no tenian suficiente stock: ': productsWithoutStock}, {'Se genero la fatura correctamente': invoice})
             if(productsWithoutStock.length != 0 && deprecatedproducts.length != 0 ) return res.status(200).json({'Productos en el carrito que no tenian suficiente stock: ': productsWithoutStock},{'Productos en el carrito que ya no existen en la base de datos: ': deprecatedproducts}, {'Se genero la fatura correctamente': invoice})

@@ -1,5 +1,5 @@
 'use strict'
-const {loginUser,createUserAdmin,createUserClient,readUsers,UpdateUser,deleteUser} = require('../controllers/user.controller');
+const {loginUser,createUserAdmin,createUserClient,readUsers,UpdateUser,deleteUser,seeUserPurchases} = require('../controllers/user.controller');
 const {Router} = require('express');
 
 
@@ -66,4 +66,14 @@ api.post('/login', [
     validateParamas
 ], loginUser);
 
+//********************************************************************************/
+// ************************ COMPRAS DEL USUARIO **********************************/
+//********************************************************************************/
+
+// Ver las compras realizadas por un usuario
+api.get('/see-user-purchases',[
+    validateJWT
+], seeUserPurchases);
+
+// ====================== Exportaciones
 module.exports = api;

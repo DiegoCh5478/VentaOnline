@@ -2,6 +2,7 @@
 const User = require('../models/user.model');
 const bcrypt = require('bcrypt');
 const {generateJWT} = require('../helpers/create-jwt');
+const Invoice = require('../models/invoice.model');
 
 //********************************************************************************/
 // ************************ CRUD PARA USUARIOS ***********************************/
@@ -205,16 +206,41 @@ const loginUser = async(req,res)=>{
 
         // Luego de verificar que el email y el password sean correctos creamos su token
         const token = await generateJWT(user.id, user.userName, user.email);
+
+        //Mostar las compras
+        let purchases = await Invoice.find(
+            {user: user.id}
+        )
+        if(purchases.length == 0) purchases = 'No se han realizado compras';
+
         res.status(200).json({
         ok: true,
         uid: user.id,
         name: user.userName,
         email: user.email,
         rol: user.rol,
-        token
+        token,
+        'Compras:':purchases
         });
 
     }catch(error){
+        throw new Error(error);
+    }
+}
+
+//********************************************************************************/
+// ************************ COMPRAS DEL USUARIO **********************************/
+//********************************************************************************/
+
+const seeUserPurchases = async(req, res)=>{
+    const idUser = req.userLogin._id;
+    try {
+        const purchases = await Invoice.find(
+            {user: idUser}
+        );
+        if(!purchases) return res.status(400).send({message: `Su usuario no ha realizado compras todavia.`});
+        return res.status(200).json({'Compras del usuario: ': purchases});
+    } catch (error) {
         throw new Error(error);
     }
 }
@@ -261,4 +287,4 @@ const userDefault = async() =>{
 
 // ====================== Exportaciones
 
-module.exports = {loginUser, createUserAdmin,createUserClient,readUsers,UpdateUser,deleteUser,userDefault};
+module.exports = {loginUser, createUserAdmin,createUserClient,readUsers,UpdateUser,deleteUser,userDefault,seeUserPurchases};

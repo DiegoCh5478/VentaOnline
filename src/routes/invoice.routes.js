@@ -44,18 +44,19 @@ api.delete('/delete-shoppingCart',[
     validateJWT
 ], deleteShoppingCart);
 
-//>>>>>>>>>>>>>>>>>>>> Vaciar carrito
+//>>>>>>>>>>>>>>>>>>>> Eliminar un producto del carrito
 api.delete('/delete-product-in-shoppingCart', [
     validateJWT, 
     check('idProduct', 'El idProduct es obligatorio para completar la funcion').not().isEmpty(),
     validateParamas
 ], deleteProductInShoppingCart)
 
+
 //********************************************************************************/
 //**************************** MANEJO DEL FACTURA ********************************/
 //********************************************************************************/
 
-//>>>>>>>>>>>>>>>>>>>> Comprar carrito
+//>>>>>>>>>>>>>>>>>>>> Comprar todo el carrito
 api.post('/buy-entire-cart', [
     validateJWT
 ], buyEntireCart)
