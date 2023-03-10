@@ -14,6 +14,7 @@ const port = process.env.PORT;
 const routesProduct = require('./src/routes/product.routes');
 const routesUser = require('./src/routes/user.routes');
 const routesCategory = require('./src/routes/category.routes');
+const routesInvoice = require('./src/routes/invoice.routes');
 
 connection();
 
@@ -27,6 +28,7 @@ userDefault();
 app.use('/api', routesUser);
 app.use('/api', routesCategory);
 app.use('/api', routesProduct);
+app.use('/api', routesInvoice);
 
 app.listen(port, () =>{
     console.log(`Servidor corriendo en el puerto ${port}`);

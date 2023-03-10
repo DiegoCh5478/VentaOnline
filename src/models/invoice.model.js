@@ -6,12 +6,12 @@ const Schema = mongoose.Schema;
 const Invoice = Schema({
     date: {type: Date, require: true},
     // Usuario al que le pertenece la factura
-    ownerUser: {type: Schema.Types.ObjectId, ref: 'users'},
+    user: {type: Schema.Types.ObjectId, ref: 'users'},
     //Productos de la factura
-    invoiceProducts: [{
+    products: [{
         product: {type: Schema.Types.ObjectId, ref: 'products'},
         amount: {type: Number, require: true},
-        prodcutNaem: {type: Number, require: true}
+        prodcutName: {type: Number, require: true}
     }],
     totalPrice: {type: Number, require: true}
 });

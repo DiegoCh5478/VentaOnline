@@ -148,6 +148,31 @@ const moveProducts = async(idCategory)=>{
     }
 }
 
+//>>>>>>>>>>>>>>>>>>>>>>>>> Ver productos junto a la categoria
+const categoryWithProduct = async(req, res)=>{
+    const categories = await Category.find();
+    if(categories.length == 0) return res.status(404).send({message: `No hay categorias agregadas a la base de datos.`});
+    //Crear el objeto que almacena nombre de la categoria junto al arreglo de categorias
+    
+    function categoriesComplete(categoryName,products ) {
+        this.categoryName = categoryName, 
+        this.products = products
+    };
+    
+    //Aregglo al que vamos a estar metiendo 
+    let arrayCategories = [];
+    for (let index = 0; index < categories.length; index++) {
+        //Crear el nuevo objeto donde se va guardar cada pareja de categoria con sus productos
+        let categoryWithProducts = new categoriesComplete();
+        categoryWithProducts.categoryName = categories[index].categoryName;
+        let id = categories[index]._id;
+        const products = await Product.find({idProductCategory:id});
+        categoryWithProducts.products = products;
+        arrayCategories.push(categoryWithProducts);
+    }
+    return res.status(200).send({message: `Categorias con productos:`, arrayCategories});
+}
+
 const comprobarADMIN = (rol)=>{
     if(rol == 'ADMIN'){
         return true;
@@ -159,4 +184,4 @@ const comprobarADMIN = (rol)=>{
 
 // ====================== Exportaciones
 
-module.exports = {cretaeCategory,updateCategory,readCategories, deleteCategory, searchCategoryByName};
+module.exports = {cretaeCategory,updateCategory,readCategories, deleteCategory, searchCategoryByName,categoryWithProduct};

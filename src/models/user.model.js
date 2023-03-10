@@ -9,7 +9,8 @@ const User = Schema({
     password: {type: String, require: true},
     rol: {type: String, require: true},
     shoppingCar: [{
-        product: {type: Schema.Types.ObjectId, ref: 'products'}
+        product: {type: Schema.Types.ObjectId, ref: 'products'},
+        quantity: {type: Number, require: true}
     }]
 });
 

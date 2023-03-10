@@ -211,7 +211,7 @@ const loginUser = async(req,res)=>{
         name: user.userName,
         email: user.email,
         rol: user.rol,
-        token,
+        token
         });
 
     }catch(error){
