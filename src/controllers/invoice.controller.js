@@ -13,14 +13,14 @@ const addToShoppingCar = async(req, res)=>{
     try {
         const {idProduct, quantity} = req.body;
 
-        const user = findUser(idUser);
-        const product = findProduct(idProduct);
+        const user = await findUser(idUser);
+        const product = await findProduct(idProduct);
         
         //Verificar que el usuario exista
         if(!user) return res.status(404).send({message: `El usuario dueño del token no existe en la base de datos.`})
         
         //Verificar que se hayan pedido productos
-        if(!quantity || quantity < 1) return res.status(400).send({message: `La cantidad minima para agregar al carrito es la unidad. Verifique `})
+        if(!quantity || quantity < 1) return res.status(400).send({message: `La cantidad minima para agregar al carrito es la unidad.`})
 
         //Verificar que el producto exista.
         if(!product) return res.status(404).send({message: `No se encontro el producto.`});
@@ -33,7 +33,7 @@ const addToShoppingCar = async(req, res)=>{
 
             if(productInTheShoppingCart == 'exceedsTheStock'){
 
-                return res.status(400).send({message: `La cantidad pedida sobrepasa el stock disponible.`})
+                return res.status(400).send({message: `La cantidad pedida sobrepasa el stock disponible. El producto ya estaba agregado al carrito.`})
 
             }
 
@@ -68,12 +68,105 @@ const addToShoppingCar = async(req, res)=>{
     }
 }
 
+// >>>>>>>>>>>>>>>>>>>>>>>>> Ver carrito
+
+const readShoppingCart = async(req, res)=>{
+    const id = req.userLogin._id; 
+    try {
+        const shoppingCart = await findUser(id);
+        const userShoppingCart = shoppingCart.shoppingCar;
+        console.log(userShoppingCart);
+        if(userShoppingCart.length == 0) return res.status(400).send({message: `No hay productos agregados al carrito.`});
+        return res.status(200).json({'Productos del carrito: ': userShoppingCart});
+    } catch (error) {
+        throw new Error(error);
+    }
+}
+
+// >>>>>>>>>>>>>>>>>>>>>>>>> Cambiar la cantidad del pedido en el carrito
+
+const updateQuantityProduct = async(req, res) => {
+    const id = req.userLogin._id;
+    try {
+
+        const {idProduct, quantity} = req.body;
+
+        const updateProduct = await User.updateOne(
+
+            {_id: id, 'shoppingCar.product': idProduct},
+
+            {
+                $set:{
+                    'shoppingCar.$.quantity': quantity
+                }
+            },
+
+            {new: true}
+        );
+
+        if(!updateProduct) return res.status(400).send({message: `El usuario no existe en la base de datos.`});
+
+        const user = await findUser(id);
+        const shoppingCar = user.shoppingCar;
+
+        return res.status(200).json({'Estado actual del carrito del usuario: ': shoppingCar});
+    } catch (error) {
+        throw new Error(error);
+    }
+}
+
+const deleteProductInShoppingCart = async(req, res)=>{
+    const id = req.userLogin._id;
+    try {
+        const {idProduct} = req.body;
+
+        const updateShoppingCart = await User.updateOne(
+            {_id: id},
+
+            {
+                $pull: {
+
+                    shoppingCar: {
+                        product: idProduct
+                    }
+
+                }
+            },
+            {new: true}
+        );
+
+        if(!updateShoppingCart) return res.status(400).send({message: `El usuario no existe en la base de datos.`});
+
+        const user = await User.findById(id);
+        const shoppingCar = user.shoppingCar;
+
+        return res.status(200).json({'Estado actual del carrito del usuario: ': shoppingCar});
+
+    } catch (error) {
+        console.error(error)
+    }
+}
+
 // >>>>>>>>>>>>>>>>>>>>>>>>> Vaciar carrito
 
 const deleteShoppingCart = async(req, res)=>{
-    id = req.userLogin._id;
+    const id = req.userLogin._id;
     try {
-        
+        const shoppingCart = await User.findByIdAndUpdate(
+            {_id: id},
+            {
+                $pull: {
+                    shoppingCar: {}
+                }
+            },
+            {new: true, multi: true}
+        );
+
+        if(!shoppingCart) return res.status(400).send({message: `No se encontro el usuario en la base datos.`});
+        const user = await findUser(id);
+        console.log(user);
+        return res.status(200).send({message: `Se vacío correctamente el carrito de compras. Datos del usuario: `, user});
+
     } catch (error) {
         throw new Error(error);
     }
@@ -134,4 +227,4 @@ const checkShoppingCartProducts = async(idUser,idProduct,_quantity)=>{
 }
 
 // ====================== Exportaciones
-module.exports = {addToShoppingCar};
+module.exports = {addToShoppingCar,deleteShoppingCart,readShoppingCart,updateQuantityProduct, deleteProductInShoppingCart};
