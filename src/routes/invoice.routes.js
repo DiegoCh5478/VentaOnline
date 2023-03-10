@@ -4,7 +4,10 @@ const {validateJWT} = require('../middlewares/validate-jwt');
 const {validateParamas} = require('../middlewares/validate-params');
 const {check} = require('express-validator');
 //Importar las funciones
-const {addToShoppingCar,readShoppingCart,updateQuantityProduct,deleteShoppingCart,deleteProductInShoppingCart} = require('../controllers/invoice.controller');
+const {addToShoppingCar,readShoppingCart,updateQuantityProduct,deleteShoppingCart,deleteProductInShoppingCart, 
+        /*Funciones de comprar*/
+        buyEntireCart
+        } = require('../controllers/invoice.controller');
 
 const api = Router();
 
@@ -47,6 +50,15 @@ api.delete('/delete-product-in-shoppingCart', [
     check('idProduct', 'El idProduct es obligatorio para completar la funcion').not().isEmpty(),
     validateParamas
 ], deleteProductInShoppingCart)
+
+//********************************************************************************/
+//**************************** MANEJO DEL FACTURA ********************************/
+//********************************************************************************/
+
+//>>>>>>>>>>>>>>>>>>>> Comprar carrito
+api.post('/buy-entire-cart', [
+    validateJWT
+], buyEntireCart)
 
 // ====================== Exportaciones
 module.exports = api;

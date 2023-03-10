@@ -26,7 +26,7 @@ const addToShoppingCar = async(req, res)=>{
         if(!product) return res.status(404).send({message: `No se encontro el producto.`});
 
         
-        //Comprobar si el producto ya fue agregado al carrito de compras anterior
+        //Comprobar si el producto ya fue agregado al carrito de compras anterior, si es asi entonces se edita el producto en el carrito
         const productInTheShoppingCart = await checkShoppingCartProducts(idUser, idProduct,quantity);
 
         if(productInTheShoppingCart){
@@ -74,10 +74,13 @@ const readShoppingCart = async(req, res)=>{
     const id = req.userLogin._id; 
     try {
         const shoppingCart = await findUser(id);
+
         const userShoppingCart = shoppingCart.shoppingCar;
-        console.log(userShoppingCart);
+
         if(userShoppingCart.length == 0) return res.status(400).send({message: `No hay productos agregados al carrito.`});
+
         return res.status(200).json({'Productos del carrito: ': userShoppingCart});
+
     } catch (error) {
         throw new Error(error);
     }
@@ -114,6 +117,8 @@ const updateQuantityProduct = async(req, res) => {
         throw new Error(error);
     }
 }
+
+// >>>>>>>>>>>>>>>>>>>>>>>>> Eliminar un producto del carrito de compras 
 
 const deleteProductInShoppingCart = async(req, res)=>{
     const id = req.userLogin._id;
@@ -172,6 +177,55 @@ const deleteShoppingCart = async(req, res)=>{
     }
 }
 
+
+//********************************************************************************/
+//************************* MANEJO DE LA COMPRA ***********************************/
+//********************************************************************************/
+
+// >>>>>>>>>>>>>>>>>>>>>>>>> Realizar la compra
+const buyEntireCart = async(req, res)=>{
+    const idUser = req.userLogin._id;
+    try {
+        
+        const user = await findUser(idUser);
+        let userShoppingCart = user.shoppingCar;
+
+        //Si el carrito esta vacio
+        if(userShoppingCart.length == 0) return res.status(400).send({message: `No hay productos en el carrito de compras.`});
+
+        const {productsApproved,deprecatedproducts} = await existingProducts(userShoppingCart);
+        const {productsWithStock, productsWithoutStock} = await checkStockShoppingCart(productsApproved);
+
+        if(productsWithStock.length != 0){
+            //Creacion de la factura
+            const invoice = new Invoice();
+            invoice.date = new Date();
+            invoice.user = idUser;
+            for (let index = 0; index < productsWithStock.length; index++) {
+                
+                let price = await findPriceProduct(productsWithStock[index].product);
+                invoice.products.push(productsWithStock[index]);
+                invoice.products[index].amount = price;
+                invoice.products[index].quantity = productsWithStock[index].quantity;
+            }
+            invoice.totalPrice = await totalPrice(productsWithStock);
+            await invoice.save();
+
+            if(deprecatedproducts.length != 0) return res.status(200).json({'Productos en el carrito que ya no existen en la base de datos: ': deprecatedproducts}, {'Se genero la fatura correctamente': invoice})
+            if(productsWithoutStock.length != 0) return res.status(200).json({'Productos en el carrito que no tenian suficiente stock: ': productsWithoutStock}, {'Se genero la fatura correctamente': invoice})
+            if(productsWithoutStock.length != 0 && deprecatedproducts.length != 0 ) return res.status(200).json({'Productos en el carrito que no tenian suficiente stock: ': productsWithoutStock},{'Productos en el carrito que ya no existen en la base de datos: ': deprecatedproducts}, {'Se genero la fatura correctamente': invoice})
+
+            //Vaciar el carrtio 
+            await deleteShoppingCartUser(idUser)
+            
+            return res.status(200).send({message: `Se genero la factura correctamente`, invoice})
+        }
+
+    } catch (error) {
+        throw new Error(error);
+    }
+}
+
 //********************************************************************************/
 //*************************** FUNCIONES EXTRA ************************************/
 //********************************************************************************/
@@ -179,6 +233,12 @@ const deleteShoppingCart = async(req, res)=>{
 const findProduct = async(idProduct)=>{
     const product = await Product.findById(idProduct);
     return product;
+}
+
+const findPriceProduct = async(idProduct)=>{
+    const product = await Product.findById(idProduct);
+    const price = product.price;
+    return price;
 }
 
 const findUser = async(idUser)=>{
@@ -191,6 +251,30 @@ const checkStockProduct = async(idProduct,quantity)=>{
     const product = await Product.findById(idProduct);
     const stockProduct = product.stock;
     return stockProduct >= quantity;
+}
+
+const totalPrice = async(shoppingCart)=>{
+    let _totalPrice = 0;
+    try {
+
+        
+        for (let index = 0; index < shoppingCart.length; index++) {
+            
+            let quantity = shoppingCart[index].quantity;
+            
+            let product = await findProduct(shoppingCart[index].product);
+            
+            let total = parseInt(product.price) * parseInt(quantity);
+            
+            _totalPrice = parseInt(total) + parseInt(_totalPrice);
+            
+        }
+
+    } catch (error) {
+        throw new Error(error);
+    }
+    console.log(`Precio total ${_totalPrice}`);
+    return parseInt(_totalPrice);
 }
 
 // Ver si ya se tiene el producto en el carito de compras
@@ -226,5 +310,110 @@ const checkShoppingCartProducts = async(idUser,idProduct,_quantity)=>{
     return productsOnShoppingCart;
 }
 
+// ******************************** Funciones para la compra
+
+// Comprobar el stock de un arreglo de objetos
+const checkStockShoppingCart = async(shoppingCart)=>{
+    try {
+
+        //Arreglo donde se van a guardar los productos que pasen lo filtros
+        let productsWithStock = [];
+        let productsWithoutStock = [];
+
+        //Recorrer el arreglo enviado
+        for (let index = 0; index < shoppingCart.length; index++) {
+            
+            let needyStock = shoppingCart[index].quantity;
+            const stock = await checkStockProduct(shoppingCart[index].product, needyStock);
+
+            if(stock){
+                productsWithStock.push(shoppingCart[index]);
+
+                //Actualizamos el stock del producto
+                await updateStockProduct(shoppingCart[index].product, needyStock);
+
+            }else{
+                productsWithoutStock.push(shoppingCart[index]);
+            }
+
+        }
+
+        return {productsWithStock, productsWithoutStock};
+
+    } catch (error) {
+        throw new Error(error);
+    }
+}
+
+// Crear un arreglos con los productos que existan y uno con los que no
+const existingProducts = async(shoppingCart)=>{
+    try {
+
+        //Arreglo donde se guardan los productos existentes
+        let productsApproved = [];
+        let deprecatedproducts = [];
+        
+        for (let index = 0; index < shoppingCart.length; index++) {
+            
+            let idProduct = shoppingCart[index].idProduct;
+            
+            idProduct = await findProduct(shoppingCart[index].product);
+            
+            if(idProduct){
+                
+                productsApproved.push(shoppingCart[index]);
+            }else{
+                
+                idProduct = shoppingCart[index].idProduct;
+                
+                deprecatedproducts.push(idProduct);
+            }
+
+        }
+        //Retornamos el objeto con los dos arreglos
+        return {productsApproved, deprecatedproducts};
+
+    } catch (error) {
+        throw new Error(error);
+    }
+}
+
+//Editar el stock que hay de cada producto
+const updateStockProduct = async(idProduct,_stock)=>{
+    const product = await findProduct(idProduct);
+    const oldStock = product.stock;
+    const newStock = parseInt(oldStock) - parseInt(_stock);
+
+    const newProduct = await Product.findByIdAndUpdate(
+        {_id: idProduct},
+        {stock: newStock},
+        {new: true, multi: false}
+    );
+    
+}
+
+//Vaciar el carrito
+const deleteShoppingCartUser = async(idUser)=>{
+    try {
+        const shoppingCart = await User.findByIdAndUpdate(
+            {_id: idUser},
+            {
+                $pull: {
+                    shoppingCar: {}
+                }
+            },
+            {new: true, multi: true}
+        );
+
+        if(!shoppingCart) return `No se encontro el usuario en la base datos.`;
+        return `Se vacio el carrito de compras`
+
+    } catch (error) {
+        throw new Error(error);
+    }
+}
+
 // ====================== Exportaciones
-module.exports = {addToShoppingCar,deleteShoppingCart,readShoppingCart,updateQuantityProduct, deleteProductInShoppingCart};
+module.exports = {addToShoppingCar,deleteShoppingCart,readShoppingCart,updateQuantityProduct, deleteProductInShoppingCart,
+                  /*Funciones de compra*/
+                  buyEntireCart};
