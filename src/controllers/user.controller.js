@@ -3,6 +3,7 @@ const User = require('../models/user.model');
 const bcrypt = require('bcrypt');
 const {generateJWT} = require('../helpers/create-jwt');
 const Invoice = require('../models/invoice.model');
+const Product = require('../models/product.model')
 
 //********************************************************************************/
 // ************************ CRUD PARA USUARIOS ***********************************/
@@ -232,6 +233,7 @@ const loginUser = async(req,res)=>{
 // ************************ COMPRAS DEL USUARIO **********************************/
 //********************************************************************************/
 
+//Ver todas las compras realizadas, ver facturas de un usuario
 const seeUserPurchases = async(req, res)=>{
     const idUser = req.userLogin._id;
     try {
@@ -242,6 +244,36 @@ const seeUserPurchases = async(req, res)=>{
         return res.status(200).json({'Compras del usuario: ': purchases});
     } catch (error) {
         throw new Error(error);
+    }
+}
+
+//Ver todos los productos comprados por un usuario
+const seePurchasedProducts = async(req, res)=>{
+    const idUser = req.userLogin._id;
+    try {
+        
+        const purchases = await Invoice.find(
+            {user: idUser}
+        );
+        
+        //Arreglo donde se van a guardar los productos que ha comprado el usuario
+        let products = [];
+        for (let index = 0; index < purchases.length; index++) {
+            
+            let product = purchases[index].products;
+            
+            let findProduct = await Product.findById(product[0].product);
+            console.log(`********findProduct: ${findProduct}`);
+            products.push(findProduct);
+            
+        }
+        console.log(products);
+        if(purchases.length == 0 || products.length == 0) return res.status(400).send({message: `El usuario no ha comprado productos.`});
+
+        return res.status(200).json({'Productos comprados por el usuario:': products});
+
+    } catch (error) {
+        
     }
 }
 
@@ -287,4 +319,4 @@ const userDefault = async() =>{
 
 // ====================== Exportaciones
 
-module.exports = {loginUser, createUserAdmin,createUserClient,readUsers,UpdateUser,deleteUser,userDefault,seeUserPurchases};
+module.exports = {loginUser, createUserAdmin,createUserClient,readUsers,UpdateUser,deleteUser,userDefault,seeUserPurchases,seePurchasedProducts};

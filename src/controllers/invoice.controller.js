@@ -148,7 +148,7 @@ const deleteProductInShoppingCart = async(req, res)=>{
         return res.status(200).json({'Estado actual del carrito del usuario: ': shoppingCar});
 
     } catch (error) {
-        console.error(error)
+        throw new Error(error);
     }
 }
 
@@ -169,7 +169,7 @@ const deleteShoppingCart = async(req, res)=>{
 
         if(!shoppingCart) return res.status(400).send({message: `No se encontro el usuario en la base datos.`});
         const user = await findUser(id);
-        console.log(user);
+        
         return res.status(200).send({message: `Se vacío correctamente el carrito de compras. Datos del usuario: `, user});
 
     } catch (error) {
@@ -213,14 +213,17 @@ const buyEntireCart = async(req, res)=>{
 
             //En caso de haberse comprado productos por que no habia suficiente stock, ya no existia en la base de datos o ambas
             if(deprecatedproducts.length != 0) return res.status(200).json({'Productos en el carrito que ya no existen en la base de datos: ': deprecatedproducts}, {'Se genero la fatura correctamente': invoice})
-            if(productsWithoutStock.length != 0) return res.status(200).json({'Productos en el carrito que no tenian suficiente stock: ': productsWithoutStock}, {'Se genero la fatura correctamente': invoice})
-            if(productsWithoutStock.length != 0 && deprecatedproducts.length != 0 ) return res.status(200).json({'Productos en el carrito que no tenian suficiente stock: ': productsWithoutStock},{'Productos en el carrito que ya no existen en la base de datos: ': deprecatedproducts}, {'Se genero la fatura correctamente': invoice})
+            if(productsWithoutStock.length != 0) return res.status(200).json({'Productos en el carrito que no tenian suficiente stock: ': productsWithoutStock, 'Se genero la fatura correctamente': invoice})
 
             //Vaciar el carrtio 
             await deleteShoppingCartUser(idUser)
             
             return res.status(200).send({message: `Se genero la factura correctamente`, invoice})
         }
+        if(deprecatedproducts.length != 0) return res.status(400).send({message: `Los productos en el carrito ya no existen la base de datos.`, });
+        if(productsWithoutStock.length != 0) return res.status(400).send({message: `La cantidad de stock no es suficiente para realizar la compra.`});
+        
+
 
     } catch (error) {
         throw new Error(error);
@@ -274,7 +277,7 @@ const totalPrice = async(shoppingCart)=>{
     } catch (error) {
         throw new Error(error);
     }
-    console.log(`Precio total ${_totalPrice}`);
+    
     return parseInt(_totalPrice);
 }
 
@@ -331,7 +334,7 @@ const checkStockShoppingCart = async(shoppingCart)=>{
                 productsWithStock.push(shoppingCart[index]);
 
                 //Actualizamos el stock del producto
-                await updateStockProduct(shoppingCart[index].product, needyStock);
+                await updateStockAndSoldProduct(shoppingCart[index].product, needyStock);
 
             }else{
                 productsWithoutStock.push(shoppingCart[index]);
@@ -380,14 +383,18 @@ const existingProducts = async(shoppingCart)=>{
 }
 
 //Editar el stock que hay de cada producto
-const updateStockProduct = async(idProduct,_stock)=>{
+const updateStockAndSoldProduct = async(idProduct,_stock)=>{
     const product = await findProduct(idProduct);
+    
     const oldStock = product.stock;
     const newStock = parseInt(oldStock) - parseInt(_stock);
 
+    const oldSold = product.sold;
+    const newSold = parseInt(_stock) + parseInt(oldSold);
+
     const newProduct = await Product.findByIdAndUpdate(
         {_id: idProduct},
-        {stock: newStock},
+        {stock: newStock, sold: newSold},
         {new: true, multi: false}
     );
     
